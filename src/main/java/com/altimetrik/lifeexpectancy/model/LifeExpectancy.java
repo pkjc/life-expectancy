@@ -52,7 +52,7 @@ public class LifeExpectancy {
 	}
 	@Override
 	public String toString() {
-		return "LifeExpectancy [sex=" + sex + ", country=" + country + ", dob=" + dob + ", remainingLifeExpectancy="
+		return "LifeExpectancy [sex=" + sex + ", country=" + country + ", remainingLifeExpectancy="
 				+ totalLifeExpectancy + "]";
 	}
 }

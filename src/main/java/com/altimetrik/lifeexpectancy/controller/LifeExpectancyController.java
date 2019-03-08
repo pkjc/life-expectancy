@@ -2,6 +2,8 @@ package com.altimetrik.lifeexpectancy.controller;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
 import org.slf4j.Logger;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.altimetrik.lifeexpectancy.exception.BadRequestException;
 import com.altimetrik.lifeexpectancy.model.LifeExpectancy;
+import com.altimetrik.lifeexpectancy.payload.LifeExpectancyResponse;
 import com.altimetrik.lifeexpectancy.service.LifeExpectancyService;
 
 @RestController
@@ -32,8 +35,10 @@ public class LifeExpectancyController {
 	// in case of errors or exception return respective message to user
 	// else return the results
 	@GetMapping("/api/{dob}")
-	public ResponseEntity<?> getLifeExpectancy(@PathVariable String dob) {
+	public LifeExpectancyResponse getLifeExpectancy(@PathVariable String dob) {
+		LifeExpectancyResponse lifeExpectancyResponse = null;
 		ResponseEntity<LifeExpectancy> minLifeExpectancyResponse = null;
+		ResponseEntity<LifeExpectancy> minLifeExpectancyResponseForToday = null;
 
 		if (dob != null && !dob.isEmpty()) {
 			Date dobDate = null;
@@ -45,13 +50,30 @@ public class LifeExpectancyController {
 				throw new BadRequestException(
 						"Invalid request argument. Please pass the date of birth in 'yyyy-mm-dd' format.");
 			}
+			
 			minLifeExpectancyResponse = LifeExpectancyService.getMinLifeExpectancyForFemalesByDob(dob);
+			minLifeExpectancyResponseForToday = getLifeExpForToday(minLifeExpectancyResponse);
+
+			lifeExpectancyResponse = new LifeExpectancyResponse(
+					minLifeExpectancyResponse.getBody().getRemainingLifeExpectancy(),
+					minLifeExpectancyResponseForToday.getBody().getRemainingLifeExpectancy());
 		} else {
 			logger.info("ERROR: " + dob);
 			throw new BadRequestException(
 					"Invalid request argument. Please pass the date of birth in 'yyyy-mm-dd' format.");
 		}
+		logger.info("Response: " + minLifeExpectancyResponse.toString());
+		return lifeExpectancyResponse;
+	}
 
-		return minLifeExpectancyResponse;
+	private ResponseEntity<LifeExpectancy> getLifeExpForToday(ResponseEntity<LifeExpectancy> minLifeExpectancyResponse) {
+		ResponseEntity<LifeExpectancy> minLifeExpectancyResponseForToday;
+		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+		LocalDate todaysDate = LocalDate.now();
+		logger.info(dtf.format(todaysDate)); // 2016/11/16
+
+		minLifeExpectancyResponseForToday = LifeExpectancyService.getMinLifeExpectancyForFemalesByToday(
+				minLifeExpectancyResponse.getBody().getCountry(), dtf.format(todaysDate));
+		return minLifeExpectancyResponseForToday;
 	}
 }

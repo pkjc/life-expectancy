@@ -23,7 +23,7 @@ public class ServicesTest {
 	
 	@Test
 	public void testGetLifeExpectancy() {
-		service.getMinLifeExpectancyForFemalesByDob("1952-03-11");
+		assertEquals("Zimbabwe", service.getMinLifeExpectancyForFemalesByDob("1952-03-11").getBody().getCountry());
 	}
 
 }

@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
+import org.apache.commons.text.WordUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,8 +59,11 @@ public class LifeExpectancyService {
 			lifeExpectancyResponse = getLifeExpectancyForCountryAndDob(country, dob);
 			if(lifeExpectancyResponse != null) {
 				logger.info("lifeExpectancyResponse: " + lifeExpectancyResponse.getBody().toString());
-				if(lifeExpectancyResponse.hasBody() && Double.compare(lifeExpectancyResponse.getBody().getRemainingLifeExpectancy(), minLifeExpectancy) <= 0) {
-					minLifeExpectancyResponse = lifeExpectancyResponse;
+				if(lifeExpectancyResponse.hasBody()) {
+					//Double lifeExp = Double.parseDouble(lifeExpectancyResponse.getBody().getRemainingLifeExpectancy());
+					if(lifeExpectancyResponse.getBody() !=null && lifeExpectancyResponse.getBody().getRemainingLifeExpectancy() < minLifeExpectancy) {
+						minLifeExpectancyResponse = lifeExpectancyResponse;
+					}
 				}
 			}
 		}
@@ -68,13 +72,6 @@ public class LifeExpectancyService {
 		
 		return minLifeExpectancyResponse;
 	}
-
-//	private ResponseEntity<Object[]> getCountriesFromApi(){
-//		StringBuilder uriForCountries = new StringBuilder();
-//		uriForCountries.append(BASE_URL).append(COUNTRIES_ENDPOINT);
-//		logger.info("uriForCountries formed: " + uriForCountries);
-//		return restTemplate.getForObject(uriForCountries.toString(), Object[].class);
-//	}
 	
 	private ResponseEntity<Country> getCountriesFromApi(){
 		StringBuilder uriForCountries = new StringBuilder();
@@ -83,15 +80,14 @@ public class LifeExpectancyService {
 		ResponseEntity<Country> response = restTemplate.exchange(uriForCountries.toString(), HttpMethod.GET, null, Country.class);
 		return response;
 	}
-	
-	
-	
+
 	private ResponseEntity<LifeExpectancy> getLifeExpectancyForCountryAndDob(String country, String dob){
 		ResponseEntity<LifeExpectancy> response = null;
 		try {
 			StringBuilder uriForLifeExpectancy = new StringBuilder();
 			country = country.replaceAll("[^A-Za-z0-9 ]", " ").trim().toLowerCase();
-			country = country.substring(0, 1).toUpperCase() + country.substring(1);
+			country = WordUtils.capitalize(country);
+			
 			uriForLifeExpectancy.append(BASE_URL)
 			.append(LIFE_EXPECTANCY_ENDPOINT)
 			.append("/total/")
